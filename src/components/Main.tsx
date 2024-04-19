@@ -3,6 +3,8 @@ import tw from "twin.macro";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 import { useClickAway } from "react-use";
+import Historical from "../Pages/Historical";
+import { useQuery } from "@tanstack/react-query";
 
 type DateRangeProps = Array<{ name: string; value: "ytd" | "y" | "5d" | "6m" }>;
 
@@ -16,10 +18,10 @@ const dateRangeTypes: DateRangeProps = [
 const Main = () => {
   const popperRef = useRef<HTMLDivElement | null>(null);
 
+  const [isOpen, setIsOpen] = useState(false);
   const [fromDate, setFromDate] = useState<Date>(new Date());
   const [toDate, setToDate] = useState<Date>(new Date());
-
-  const [isOpen, setIsOpen] = useState(false);
+  const [reset, setReset] = useState(false);
   const [selectedDateKey, setSelectedDateKey] = useState<
     "from" | "to" | "range"
   >();
@@ -29,6 +31,16 @@ const Main = () => {
   useClickAway(popperRef, () => {
     setIsOpen(false);
   });
+
+  // const { isPending, error, data } = useQuery({
+  //   queryKey: ["repoData"],
+  //   queryFn: () =>
+  //     fetch("https://api.github.com/repos/TanStack/query").then((res) =>
+  //       res.json()
+  //     ),
+  // });
+  // if (isPending) return "Loading...";
+  // if (error) return "An error has occurred: " + error.message;
 
   return (
     <Container>
@@ -40,14 +52,17 @@ const Main = () => {
         <Toolbar>
           <DateForm>
             <DatePickerList>
-              <Label>From:</Label>
               <DatePickerButton
                 onClick={() => {
                   setIsOpen(!isOpen);
                   setSelectedDateKey("from");
                 }}
               >
-                {format(fromDate, "yyyy-MM-dd")}
+                {!reset && fromDate ? (
+                  format(fromDate, "yyyy-MM-dd")
+                ) : (
+                  <span className="text-gray-700">From Date</span>
+                )}
               </DatePickerButton>
               {isOpen && selectedDateKey === "from" ? (
                 <DatePickerWrapper ref={popperRef}>
@@ -57,6 +72,7 @@ const Main = () => {
                       setIsOpen(!isOpen);
                       setFromDate(date);
                       setSelectedDateKey(undefined);
+                      setReset(false);
                     }}
                     inline
                     maxDate={new Date()}
@@ -66,14 +82,17 @@ const Main = () => {
             </DatePickerList>
 
             <DatePickerList>
-              <Label>To:</Label>
               <DatePickerButton
                 onClick={() => {
                   setIsOpen(!isOpen);
                   setSelectedDateKey("to");
                 }}
               >
-                {format(toDate, "yyyy-MM-dd")}
+                {!reset && toDate ? (
+                  format(toDate, "yyyy-MM-dd")
+                ) : (
+                  <span className="text-gray-700">To Date</span>
+                )}
               </DatePickerButton>
 
               {isOpen && selectedDateKey === "to" ? (
@@ -84,16 +103,17 @@ const Main = () => {
                       setIsOpen(!isOpen);
                       setToDate(date);
                       setSelectedDateKey(undefined);
+                      setReset(false);
                     }}
                     inline
                     maxDate={new Date()}
+                    isClearable={selectedDateKey === undefined}
                   />
                 </DatePickerWrapper>
               ) : null}
             </DatePickerList>
 
             <DatePickerList>
-              <Label>Range:</Label>
               <DatePickerButton
                 onClick={() => {
                   setIsOpen(!isOpen);
@@ -108,7 +128,7 @@ const Main = () => {
                 )}
               </DatePickerButton>
               {isOpen && selectedDateKey === "range" ? (
-                <RangePopper>
+                <RangePopper ref={popperRef}>
                   <ul>
                     {dateRangeTypes.map(({ name, value }) => (
                       <li
@@ -128,10 +148,20 @@ const Main = () => {
             </DatePickerList>
           </DateForm>
           <Action>
+            <ResetBtn
+              onClick={() => {
+                setSelectedRange(undefined);
+                setSelectedDateKey(undefined);
+                setReset(true);
+              }}
+            >
+              Reset
+            </ResetBtn>
             <SubmitBtn>Submit</SubmitBtn>
-            <ResetBtn>Reset</ResetBtn>
           </Action>
         </Toolbar>
+
+        <Historical />
       </ContentWrapper>
     </Container>
   );
@@ -143,11 +173,11 @@ const Container = tw.main`flex flex-col items-center w-full`;
 
 const Header = tw.header`flex flex-col w-full items-center py-10  border-black`;
 
-const SearchInput = tw.input`text-slate-300 font-light text-2xl bg-black rounded-full p-5 w-2/3 placeholder:text-slate-800 outline-none focus:(ring ring-8 ring-gray-900)`;
+const SearchInput = tw.input`text-slate-300 font-light text-2xl bg-black rounded-full p-5 w-2/3 placeholder:text-slate-600 outline-none focus:(ring ring-8 ring-gray-900)`;
 
-const ContentWrapper = tw.div`flex flex-row items-center justify-center w-11/12`;
+const ContentWrapper = tw.div`flex flex-col justify-center w-11/12`;
 
-const Toolbar = tw.div`flex gap-x-10 items-center bg-gray-900 rounded-lg py-5 px-10`;
+const Toolbar = tw.div`flex w-fit self-center gap-x-10 items-center bg-gray-900 rounded-lg py-5 px-10`;
 
 const DateForm = tw.div`flex items-center justify-center gap-x-10 border-r border-black py-2 pr-10 `;
 
@@ -159,11 +189,9 @@ const ResetBtn = tw.button`h-fit font-light rounded-3xl bg-gray-950 hover:(ring-
 
 const DatePickerList = tw.div`flex flex-col relative `;
 
-const DatePickerWrapper = tw.div`absolute! top-full! left-0!`;
+const DatePickerWrapper = tw.div`z-50 absolute! top-full! left-0!`;
 
-const DatePickerButton = tw.button`w-fit rounded bg-slate-950 text-gray-300 p-2 px-10`;
-
-const Label = tw.span`block text-gray-500 pb-1`;
+const DatePickerButton = tw.button`w-fit rounded-lg hover:bg-black bg-slate-950 text-gray-300 p-2 px-10`;
 
 const RangePopper = tw(
   DatePickerWrapper
