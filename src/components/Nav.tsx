@@ -10,6 +10,9 @@ const Nav = () => {
 
       <Profile>
         <BiSolidUserCircle className="flex self-center w-24 h-24" />
+        <span className="flex self-center bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-orange-500 text-xl py-2 ">
+          Valentine Aduaka
+        </span>
         <ul>
           <li>Profile</li>
           <li>Portfolio</li>
