@@ -1,0 +1,8 @@
+services:
+  app:
+    build: .
+    volumes:
+      - ./:/usr/src/app
+    container_name: sail-x-portal
+    ports:
+      - 8001:8000
